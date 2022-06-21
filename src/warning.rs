@@ -1,6 +1,7 @@
-use std::time::Duration;
+use std::intrinsics::unlikely;
 
-use super::{despawn_screen, GameFrames};
+use super::GameFrames;
+use crate::despawn_unload;
 use bevy::prelude::*;
 
 pub struct WarningPlugin;
@@ -17,7 +18,7 @@ impl Plugin for WarningPlugin {
             )
             .add_system_set(
                 SystemSet::on_exit(GameFrames::Frame17)
-                    .with_system(despawn_screen::<OnWarningScreen>),
+                    .with_system(despawn_unload::<OnWarningScreen>),
             );
     }
 }
@@ -73,22 +74,22 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 #[derive(Deref, DerefMut)]
 pub struct FadeTimer(Timer);
 
-fn countdown(
-    time: Res<Time>,
-    mut timer: ResMut<WarningTimer>,
-    mut fade_timer: ResMut<FadeTimer>,
-) {
+fn countdown(time: Res<Time>, mut timer: ResMut<WarningTimer>, mut fade_timer: ResMut<FadeTimer>) {
     if timer.tick(time.delta()).finished() || timer.paused() {
         fade_timer.tick(time.delta());
     }
 }
 
-fn fade(timer: ResMut<FadeTimer>, mut query: Query<&mut UiColor>, mut game_state: ResMut<State<GameFrames>>) {
+fn fade(
+    timer: ResMut<FadeTimer>,
+    mut query: Query<&mut UiColor>,
+    mut game_state: ResMut<State<GameFrames>>,
+) {
     if timer.percent_left() == 100.0 {
         return;
     }
 
-    if timer.finished() {
+    if unlikely(timer.finished()) {
         for mut color in query.iter_mut() {
             color.0.set_a(0.0);
             game_state.set(GameFrames::Title).unwrap();
@@ -100,7 +101,11 @@ fn fade(timer: ResMut<FadeTimer>, mut query: Query<&mut UiColor>, mut game_state
     }
 }
 
-fn keyboard(mut game_state: ResMut<State<GameFrames>>, keys: Res<Input<KeyCode>>, mut timer: ResMut<WarningTimer>) {
+fn keyboard(
+    mut game_state: ResMut<State<GameFrames>>,
+    keys: Res<Input<KeyCode>>,
+    mut timer: ResMut<WarningTimer>,
+) {
     if keys.just_pressed(KeyCode::Return) || keys.just_pressed(KeyCode::NumpadEnter) {
         if timer.finished() {
             game_state.set(GameFrames::Title).unwrap();
@@ -111,7 +116,11 @@ fn keyboard(mut game_state: ResMut<State<GameFrames>>, keys: Res<Input<KeyCode>>
     }
 }
 
-fn mouse(mut game_state: ResMut<State<GameFrames>>, mouse: Res<Input<MouseButton>>, mut timer: ResMut<WarningTimer>) {
+fn mouse(
+    mut game_state: ResMut<State<GameFrames>>,
+    mouse: Res<Input<MouseButton>>,
+    mut timer: ResMut<WarningTimer>,
+) {
     if mouse.just_pressed(MouseButton::Left) {
         if timer.finished() {
             game_state.set(GameFrames::Title).unwrap();
