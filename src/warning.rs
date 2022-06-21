@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-
-use crate::{despawn_screen, GameFrames};
+use super::{despawn_screen, GameFrames};
 
 pub struct WarningPlugin;
 
