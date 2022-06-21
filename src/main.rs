@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    DefaultPlugins, render::camera::ScalingMode,
+    DefaultPlugins,
 };
 
 mod warning;
@@ -38,13 +38,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    let mut camera = UiCameraBundle::default();
-    camera.orthographic_projection.scaling_mode = ScalingMode::WindowSize;
-    commands.spawn_bundle(camera);
-    // commands.spawn_bundle()
-    // commands.spawn_bundle(camera);
-    // commands.spawn_bundle(UiCameraBundle::default());
-    // commands.spawn_bundle(TiledCameraBundle::new().with_target_resolution(1, [1280, 720]));
+    commands.spawn_bundle(UiCameraBundle::default());
 }
 
 pub fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
