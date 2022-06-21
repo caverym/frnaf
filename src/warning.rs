@@ -42,14 +42,24 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             color: UiColor(Color::rgba(1.0, 1.0, 1.0, 1.0)),
             image: UiImage(warning_text),
             style: Style {
-                margin: Rect {
-                    top: Val::Px(249.0),
-                    left: Val::Px(426.0),
-                    bottom: Val::Px(373.0),
-                    ..default()
-                },
+                //margin: Rect {
+                //    top: Val::Px(249.0),
+                //    left: Val::Px(426.0),
+                //    bottom: Val::Px(373.0),
+                    // right: Val::Px(891.0),
+                //    ..default()
+                //},
                 // margin: Rect { top: Val::Px(249.0), left: Val::Px(426.0), ..default()}, // right: Val::Px(891.0), ..default() }, // bottom: Val::Px(373.0) },
-                size: Size::new(Val::Px(465.0), Val::Px(124.0)),
+                // position: Rect { right: Val::Px(389.0), top: Val::Px(249.0), ..default() },
+                position: Rect {
+                    //right: Val::Percent(30.390625),
+                    top: Val::Percent(34.583333333),
+                    bottom: Val::Percent(48.194444444),
+                    left: Val::Percent(33.28125),
+                    .. default()
+                },
+                position_type: PositionType::Absolute,
+                // size: Size::new(Val::Px(465.0), Val::Px(124.0)),
                 ..default()
             },
             ..default()
