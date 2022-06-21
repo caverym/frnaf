@@ -1,10 +1,12 @@
 #![feature(core_intrinsics)]
 
 use bevy::{
+    app::AppExit,
     prelude::*,
     window::{WindowMode, WindowResizeConstraints},
     DefaultPlugins,
 };
+use bevy_kira_audio::AudioPlugin;
 
 mod title;
 mod warning;
@@ -49,7 +51,9 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .add_plugins(DefaultPlugins)
+        .add_plugin(AudioPlugin)
         .add_startup_system(setup)
+        .add_system(escape)
         .add_state(GameFrames::Frame17)
         .add_plugin(warning::WarningPlugin)
         .add_plugin(title::TitlePlugin)
@@ -58,6 +62,25 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
+}
+
+fn escape(
+    keys: Res<Input<KeyCode>>,
+    mut exit: EventWriter<AppExit>,
+    game_state: Res<State<GameFrames>>,
+) {
+    if keys.just_pressed(KeyCode::Escape)
+        && ![
+            GameFrames::CreepyEnd,
+            GameFrames::CreepyStart,
+            GameFrames::Ad,
+            GameFrames::WhatDay,
+            GameFrames::Wait,
+        ]
+        .contains(game_state.current())
+    {
+        exit.send(AppExit);
+    }
 }
 
 pub fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
