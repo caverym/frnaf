@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.7"
+rand = "0.8.5"
+benimator = "3"
 
 [dependencies.bevy_kira_audio]
 version = "0.10.0"
