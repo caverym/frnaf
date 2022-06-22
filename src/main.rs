@@ -1,7 +1,10 @@
 #![feature(core_intrinsics)]
+#![windows_subsystem = "windows"]
+
+use std::intrinsics::unlikely;
 
 use assets::GameAssetsIo;
-use bevy::{app::AppExit, prelude::*, window::WindowResizeConstraints, DefaultPlugins, asset::AssetPlugin};
+use bevy::{app::AppExit, prelude::*, window::{WindowResizeConstraints, WindowMode}, DefaultPlugins, asset::AssetPlugin, render::{RenderApp, renderer::RenderDevice, camera::RenderTarget, settings::Backends}};
 use bevy_embasset::EmbassetPlugin;
 use bevy_kira_audio::AudioPlugin;
 
@@ -31,16 +34,18 @@ pub enum GameFrames {
     EndOfDemo,
 }
 
+
 fn main() {
-    App::new()
-        .insert_resource(WindowDescriptor {
+    let mut app = App::new();
+
+    app.insert_resource(WindowDescriptor {
             width: 1280.0,
             height: 720.0,
             title: "Five Nights at Freddy's".to_string(),
-            resizable: false,
+            resizable: true,
             cursor_visible: true,
             cursor_locked: false,
-            // mode: WindowMode::SizedFullscreen,
+            mode: WindowMode::SizedFullscreen,
             resize_constraints: WindowResizeConstraints {
                 min_width: 1280.0,
                 min_height: 720.0,
@@ -56,11 +61,30 @@ fn main() {
         })
         .add_plugin(AudioPlugin)
         .add_system(escape)
+        .add_system(view)
         .add_state(GameFrames::Frame17)
         .add_plugin(warning::WarningPlugin)
         .add_plugin(title::TitlePlugin)
-        .insert_resource(Count::<usize>(1))
-        .run();
+        .insert_resource(Count::<usize>(1));
+
+        #[cfg(target_os = "windows")]
+        app.insert_resource(Backends::DX11);
+
+        app.run();
+
+}
+
+fn view(keys: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+    if unlikely(keys.just_pressed(KeyCode::F11)) {
+        let window = windows.primary_mut();
+        let new = match window.mode() {
+            WindowMode::Windowed => WindowMode::SizedFullscreen,
+            WindowMode::SizedFullscreen => WindowMode::Windowed,
+            what => panic!("Unexpected WindowMode: {:?}", what),
+        };
+        window.set_mode(new);
+    }
+    
 }
 
 fn escape(
