@@ -1,6 +1,7 @@
 # Five Rusty Nights at Freddy's
 
 A remake of the original FNAF game in Rust using the [Bevy](https://bevyengine.org/) game engine.
+Coded by [Caverym](https://github.com/caverym) and [AITYunivers](https://github.com/aityunivers)
 
 ## Assets
 
