@@ -199,6 +199,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fce306d40a111309ee61d4626efbafccdd46bb80657122c38061fa7264c08e4"
 dependencies = [
+ "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -212,6 +213,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "bevy-embasset"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d2c3d5f6578bbb67a29f9a721ef3cb56239f0e6fc902298b3d269a76dd646c2"
+dependencies = [
+ "bevy",
+ "derive_more",
+ "paste",
+ "smol_str",
+ "strum",
 ]
 
 [[package]]
@@ -353,6 +367,15 @@ dependencies = [
  "bevy_ecs",
  "bevy_log",
  "bevy_utils",
+]
+
+[[package]]
+name = "bevy_dylib"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bf02ce7a578743cd94cb38dc7a9b405d6058a2317011744371eaa56b4d6e786"
+dependencies = [
+ "bevy_internal",
 ]
 
 [[package]]
@@ -1025,6 +1048,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "convert_case"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
 name = "copyless"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1265,6 +1294,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "0.99.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "rustc_version 0.4.0",
+ "syn",
+]
+
+[[package]]
 name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1379,8 +1421,11 @@ version = "0.1.0"
 dependencies = [
  "benimator",
  "bevy",
+ "bevy-embasset",
  "bevy_kira_audio",
+ "paste",
  "rand",
+ "strum",
 ]
 
 [[package]]
@@ -1614,6 +1659,12 @@ name = "hashbrown"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db0d4cf898abf0081f964436dc980e96670a0f36863e4b83aaacdb65c9d7ccc3"
+
+[[package]]
+name = "heck"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hermit-abi"
@@ -2354,6 +2405,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
+
+[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2595,6 +2652,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0a5f7c728f5d284929a1cccb5bc19884422bfe6ef4d6c409da2c41838983fcf"
+
+[[package]]
 name = "rusty-xinput"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2739,6 +2802,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "smol_str"
+version = "0.1.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7475118a28b7e3a2e157ce0131ba8c5526ea96e90ee601d9f6bb2e286a35ab44"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "spirv"
 version = "0.2.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2820,6 +2892,28 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "strum"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6878079b17446e4d3eba6192bb0a2950d5b14f0ed8424b852310e5a94345d0ef"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn",
+]
 
 [[package]]
 name = "svg_fmt"

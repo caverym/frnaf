@@ -12,7 +12,8 @@
                 "args": [
                     "build",
                     "--bin=frnaf",
-                    "--package=frnaf"
+                    "--package=frnaf",
+                    "--release"
                 ],
                 "filter": {
                     "name": "frnaf",

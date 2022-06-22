@@ -1,13 +1,12 @@
 #![feature(core_intrinsics)]
 
-use bevy::{
-    app::AppExit,
-    prelude::*,
-    window::WindowResizeConstraints,
-    DefaultPlugins,
-};
+use assets::GameAssetsIo;
+use bevy::{app::AppExit, prelude::*, window::WindowResizeConstraints, DefaultPlugins, asset::AssetPlugin};
+use bevy_embasset::EmbassetPlugin;
 use bevy_kira_audio::AudioPlugin;
 
+mod assets;
+mod counter;
 mod title;
 mod warning;
 
@@ -50,12 +49,17 @@ fn main() {
             ..default()
         })
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins)
+        .add_plugins_with(DefaultPlugins, |group| {
+            group.add_before::<AssetPlugin, _>(EmbassetPlugin::new(|io| {
+                io.add_handler(GameAssetsIo::new().into());
+            }))
+        })
         .add_plugin(AudioPlugin)
         .add_system(escape)
         .add_state(GameFrames::Frame17)
         .add_plugin(warning::WarningPlugin)
         .add_plugin(title::TitlePlugin)
+        .insert_resource(Count::<usize>(1))
         .run();
 }
 
@@ -104,3 +108,6 @@ macro_rules! from_ct {
         )
     };
 }
+
+#[derive(Component, Deref, DerefMut)]
+struct Count<T: std::fmt::Display>(T);

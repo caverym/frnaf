@@ -1,7 +1,7 @@
 use std::intrinsics::unlikely;
 
 use super::GameFrames;
-use crate::despawn_unload;
+use crate::{despawn_unload, assets::GameAssets};
 use bevy::prelude::*;
 
 pub struct WarningPlugin;
@@ -36,12 +36,11 @@ pub struct OnWarningScreen;
 pub struct WarningTimer(Timer);
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let warning_text = asset_server.load("images/[0] 'Frame 17'/[unsorted]/605.png");
     commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(ImageBundle {
             color: UiColor(Color::rgba(1.0, 1.0, 1.0, 1.0)),
-            image: UiImage(warning_text),
+            image: UiImage(asset_server.load(GameAssets::Warning.path())),
             style: Style {
                 //margin: Rect {
                 //    top: Val::Px(249.0),
