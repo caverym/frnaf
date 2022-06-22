@@ -3,7 +3,7 @@
 use bevy::{
     app::AppExit,
     prelude::*,
-    window::{WindowMode, WindowResizeConstraints},
+    window::WindowResizeConstraints,
     DefaultPlugins,
 };
 use bevy_kira_audio::AudioPlugin;
@@ -41,7 +41,7 @@ fn main() {
             resizable: false,
             cursor_visible: true,
             cursor_locked: false,
-            mode: WindowMode::SizedFullscreen,
+            // mode: WindowMode::SizedFullscreen,
             resize_constraints: WindowResizeConstraints {
                 min_width: 1280.0,
                 min_height: 720.0,
@@ -52,16 +52,11 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .add_plugins(DefaultPlugins)
         .add_plugin(AudioPlugin)
-        .add_startup_system(setup)
         .add_system(escape)
         .add_state(GameFrames::Frame17)
         .add_plugin(warning::WarningPlugin)
         .add_plugin(title::TitlePlugin)
         .run();
-}
-
-fn setup(mut commands: Commands) {
-    commands.spawn_bundle(UiCameraBundle::default());
 }
 
 fn escape(
@@ -97,4 +92,15 @@ fn despawn_unload<T: Component>(
     despawn_screen(to_despawn, commands);
     asset_server.mark_unused_assets();
     asset_server.free_unused_assets();
+}
+
+#[macro_export]
+macro_rules! from_ct {
+    ($x:expr, $y:expr, $w:expr, $h:expr, $ax:expr, $ay:expr, $z:expr) => {
+        Vec3::new(
+            (($x + $ax / -1.0) + $w / 2.0) - 1280.0 / 2.0,
+            ((($y + $ay / -1.0) + $h / 2.0) - 720.0 / 2.0) / -1.0,
+            $z,
+        )
+    };
 }
