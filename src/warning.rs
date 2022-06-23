@@ -1,7 +1,7 @@
 use std::intrinsics::unlikely;
 
 use super::GameFrames;
-use crate::{despawn_unload, assets::GameAssets};
+use crate::{assets::GameAssets, despawn_unload};
 use bevy::prelude::*;
 
 pub struct WarningPlugin;
