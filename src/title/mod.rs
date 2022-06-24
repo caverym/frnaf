@@ -26,7 +26,8 @@ impl Plugin for TitlePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Title)
                     .with_system(show_hide)
-                    .with_system(button_system),
+                    .with_system(button_system)
+                    .with_system(arrow_keys),
             )
             .add_system_set(
                 SystemSet::on_exit(GameState::Title).with_system(despawn_unload::<OnTitleScreen>),
@@ -127,28 +128,54 @@ impl Moved {
 }
 
 fn button_system(
-    mut interaction_query: Query<
-        (&Interaction, &Children, &ArrowLocation),
-        (Changed<Interaction>, With<Button>),
-    >,
+    mut interaction_query: Query<(&Interaction, &Children, &ArrowLocation), With<Button>>,
     mut visa: Query<&mut Visibility>,
     mut moved: ResMut<Moved>,
     mut glob: ResMut<ArrowLocation>,
 ) {
     for (interaction, children, loc) in interaction_query.iter_mut() {
         let mut vis = visa.get_mut(children[0]).unwrap();
+
+        if *glob == *loc {
+            vis.is_visible = true;
+        } else {
+            vis.is_visible = false;
+        }
+
         match *interaction {
-            Interaction::None => {
-                if moved.moved() {
-                    vis.is_visible = false;
-                }
-            }
             Interaction::Clicked => todo!(),
             Interaction::Hovered => {
                 moved.st();
                 vis.is_visible = true;
                 *glob = *loc;
             }
+            Interaction::None => {
+                if moved.moved() {
+                    if *glob != *loc {
+                        vis.is_visible = false;
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn arrow_keys(keys: Res<Input<KeyCode>>, mut glob: ResMut<ArrowLocation>) {
+    if keys.just_pressed(KeyCode::Up) {
+        match *glob {
+            ArrowLocation::NewGame => *glob = ArrowLocation::CustomNight,
+            ArrowLocation::Continue => *glob = ArrowLocation::NewGame,
+            ArrowLocation::SThNight => *glob = ArrowLocation::Continue,
+            ArrowLocation::CustomNight => *glob = ArrowLocation::SThNight,
+        }
+    }
+
+    if keys.just_pressed(KeyCode::Down) {
+        match *glob {
+            ArrowLocation::NewGame => *glob = ArrowLocation::Continue,
+            ArrowLocation::Continue => *glob = ArrowLocation::SThNight,
+            ArrowLocation::SThNight => *glob = ArrowLocation::CustomNight,
+            ArrowLocation::CustomNight => *glob = ArrowLocation::NewGame,
         }
     }
 }
@@ -402,17 +429,6 @@ fn setup(
         })
         .insert(OnTitleScreen)
         .insert(NightDisplay);
-
-    // arrow
-    commands.spawn_bundle(ImageBundle {
-        image: UiImage(load!(asr, T450)),
-        transform: Transform {
-            translation: from_ct!(132.0, 493.0, 43.0, 26.0, 21.0, 13.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
 
     channelone.play(load!(asr, Static2));
     channeltwo.play_looped(load!(asr, DarknessMusic));
