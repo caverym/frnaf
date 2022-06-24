@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+use super::OnTitleScreen;
+
 pub struct StaticPlugin;
 
 impl Plugin for StaticPlugin {
@@ -71,5 +73,6 @@ fn setup(
             ..default()
         })
         .insert(StaticTimer(Timer::from_seconds(0.0168350168, true)))
-        .insert(StaticOpTimer(Timer::from_seconds(0.09, true)));
+        .insert(StaticOpTimer(Timer::from_seconds(0.09, true)))
+        .insert(OnTitleScreen);
 }

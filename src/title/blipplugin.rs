@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+use super::OnTitleScreen;
+
 pub struct BlipPlugin;
 
 impl Plugin for BlipPlugin {
@@ -88,5 +90,6 @@ fn setup(
         })
         .insert(BlipTimer(Timer::from_seconds(0.166666667, true)))
         .insert(BlipOpTimer(Timer::from_seconds(0.08, true)))
-        .insert(BlipVisTimer(Timer::from_seconds(0.3, true)));
+        .insert(BlipVisTimer(Timer::from_seconds(0.3, true)))
+        .insert(OnTitleScreen);
 }

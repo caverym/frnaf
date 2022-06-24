@@ -359,7 +359,9 @@ fn setup(
                 },
                 ..default()
             },
-            visibility: Visibility { is_visible: config.beatgame() },
+            visibility: Visibility {
+                is_visible: config.beatgame(),
+            },
             ..default()
         })
         .with_children(|p| {
@@ -402,7 +404,9 @@ fn setup(
                 },
                 ..default()
             },
-            visibility: Visibility { is_visible: config.beat_six() },
+            visibility: Visibility {
+                is_visible: config.beat_six(),
+            },
             ..default()
         })
         .with_children(|p| {
@@ -495,42 +499,74 @@ fn setup(
         .insert(OnTitleScreen)
         .insert(Animator::new(animation));
 
-
-    commands.spawn_bundle(ImageBundle {
-        image: UiImage(load!(asr, T432)),
-        style: Style {
-            position_type: PositionType::Absolute,
-            position: Rect { bottom: Val::Px(354.0), left: Val::Px(172.0), ..default() },
-            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+    commands
+        .spawn_bundle(ImageBundle {
+            image: UiImage(load!(asr, T432)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    bottom: Val::Px(354.0),
+                    left: Val::Px(172.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(57.0),
+                    height: Val::Px(55.0),
+                },
+                ..default()
+            },
+            visibility: Visibility {
+                is_visible: config.beatgame(),
+            },
             ..default()
-        },
-        visibility: Visibility { is_visible: config.beatgame() },
-        ..default()
-    });
+        })
+        .insert(OnTitleScreen);
 
-    commands.spawn_bundle(ImageBundle {
-        image: UiImage(load!(asr, T432)),
-        style: Style {
-            position_type: PositionType::Absolute,
-            position: Rect { bottom: Val::Px(354.0), left: Val::Px(249.0), ..default() },
-            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+    commands
+        .spawn_bundle(ImageBundle {
+            image: UiImage(load!(asr, T432)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    bottom: Val::Px(354.0),
+                    left: Val::Px(249.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(57.0),
+                    height: Val::Px(55.0),
+                },
+                ..default()
+            },
+            visibility: Visibility {
+                is_visible: config.beat_six(),
+            },
             ..default()
-        },
-        visibility: Visibility { is_visible: config.beat_six() },
-        ..default()
-    });
+        })
+        .insert(OnTitleScreen);
 
-    commands.spawn_bundle(ImageBundle {
-        image: UiImage(load!(asr, T432)),
-        style: Style {
-            position_type: PositionType::Absolute,
-            position: Rect { bottom: Val::Px(354.0), left: Val::Px(326.0), ..default() },
-            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+    commands
+        .spawn_bundle(ImageBundle {
+            image: UiImage(load!(asr, T432)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    bottom: Val::Px(354.0),
+                    left: Val::Px(326.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(57.0),
+                    height: Val::Px(55.0),
+                },
+                ..default()
+            },
+            visibility: Visibility {
+                is_visible: config.beat_seven(),
+            },
             ..default()
-        },
-        visibility: Visibility { is_visible: config.beat_seven() },
-        ..default()
-    });
+        })
+        .insert(OnTitleScreen);
 
     channelone.play(load!(asr, Static2));
     channeltwo.play_looped(load!(asr, DarknessMusic));

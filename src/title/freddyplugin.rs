@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+use super::OnTitleScreen;
+
 pub struct FreddyPlugin;
 
 impl Plugin for FreddyPlugin {
@@ -33,7 +35,8 @@ fn setup(
             ..default()
         })
         .insert(FreddyTimer(Timer::from_seconds(0.08, true)))
-        .insert(FreddyOpTimer(Timer::from_seconds(0.3, true)));
+        .insert(FreddyOpTimer(Timer::from_seconds(0.3, true)))
+        .insert(OnTitleScreen);
 }
 
 fn freddy_op_changer(
