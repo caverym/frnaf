@@ -5,8 +5,7 @@ use crate::{despawn_unload, from_ct, save::Config};
 use bevy::prelude::*;
 use bevy_kira_audio::{AudioApp, AudioChannel};
 use bevy_tweening::{
-    lens::TransformPositionLens, Animator, EaseMethod, Tween, TweeningPlugin,
-    TweeningType,
+    lens::TransformPositionLens, Animator, EaseMethod, Tween, TweeningPlugin, TweeningType,
 };
 
 mod blipplugin;
@@ -144,22 +143,35 @@ fn button_system(
                     (false, false, false, ArrowLocation::NewGame | ArrowLocation::Continue) => {
                         vis.is_visible = true;
                         *glob = *loc;
-                    },
-                    (true, false, false, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight) => {
+                    }
+                    (
+                        true,
+                        false,
+                        false,
+                        ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight,
+                    ) => {
                         vis.is_visible = true;
                         *glob = *loc;
-                    },
-                    (true, true, _, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight | ArrowLocation::CustomNight) => {
+                    }
+                    (
+                        true,
+                        true,
+                        _,
+                        ArrowLocation::NewGame
+                        | ArrowLocation::Continue
+                        | ArrowLocation::SThNight
+                        | ArrowLocation::CustomNight,
+                    ) => {
                         vis.is_visible = true;
                         *glob = *loc;
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
             Interaction::None => {
-                    if *glob != *loc {
-                        vis.is_visible = false;
-                    }
+                if *glob != *loc {
+                    vis.is_visible = false;
+                }
             }
         }
     }
@@ -347,6 +359,7 @@ fn setup(
                 },
                 ..default()
             },
+            visibility: Visibility { is_visible: config.beatgame() },
             ..default()
         })
         .with_children(|p| {
@@ -389,6 +402,7 @@ fn setup(
                 },
                 ..default()
             },
+            visibility: Visibility { is_visible: config.beat_six() },
             ..default()
         })
         .with_children(|p| {
@@ -480,6 +494,43 @@ fn setup(
         })
         .insert(OnTitleScreen)
         .insert(Animator::new(animation));
+
+
+    commands.spawn_bundle(ImageBundle {
+        image: UiImage(load!(asr, T432)),
+        style: Style {
+            position_type: PositionType::Absolute,
+            position: Rect { bottom: Val::Px(354.0), left: Val::Px(172.0), ..default() },
+            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+            ..default()
+        },
+        visibility: Visibility { is_visible: config.beatgame() },
+        ..default()
+    });
+
+    commands.spawn_bundle(ImageBundle {
+        image: UiImage(load!(asr, T432)),
+        style: Style {
+            position_type: PositionType::Absolute,
+            position: Rect { bottom: Val::Px(354.0), left: Val::Px(249.0), ..default() },
+            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+            ..default()
+        },
+        visibility: Visibility { is_visible: config.beat_six() },
+        ..default()
+    });
+
+    commands.spawn_bundle(ImageBundle {
+        image: UiImage(load!(asr, T432)),
+        style: Style {
+            position_type: PositionType::Absolute,
+            position: Rect { bottom: Val::Px(354.0), left: Val::Px(326.0), ..default() },
+            size: Size { width: Val::Px(57.0), height: Val::Px(55.0) },
+            ..default()
+        },
+        visibility: Visibility { is_visible: config.beat_seven() },
+        ..default()
+    });
 
     channelone.play(load!(asr, Static2));
     channeltwo.play_looped(load!(asr, DarknessMusic));
