@@ -1,7 +1,13 @@
+use std::time::Duration;
+
 use super::GameState;
 use crate::{despawn_unload, from_ct, save::Config};
 use bevy::prelude::*;
 use bevy_kira_audio::{AudioApp, AudioChannel};
+use bevy_tweening::{
+    lens::TransformPositionLens, Animator, EaseFunction, EaseMethod, Tween, TweeningPlugin,
+    TweeningType,
+};
 
 mod blipplugin;
 mod freddyplugin;
@@ -15,6 +21,7 @@ impl Plugin for TitlePlugin {
         app.add_plugin(freddyplugin::FreddyPlugin)
             .add_plugin(staticplugin::StaticPlugin)
             .add_plugin(blipplugin::BlipPlugin)
+            .add_plugin(TweeningPlugin)
             .add_audio_channel::<ChannelOne>()
             .add_audio_channel::<ChannelTwo>()
             .add_audio_channel::<ChannelThree>()
@@ -132,22 +139,45 @@ fn button_system(
     mut visa: Query<&mut Visibility>,
     mut moved: ResMut<Moved>,
     mut glob: ResMut<ArrowLocation>,
+    config: Res<Config>,
 ) {
     for (interaction, children, loc) in interaction_query.iter_mut() {
         let mut vis = visa.get_mut(children[0]).unwrap();
 
-        if *glob == *loc {
-            vis.is_visible = true;
-        } else {
-            vis.is_visible = false;
+        if glob.is_changed() {
+            if *glob == *loc {
+                vis.is_visible = true;
+            } else {
+                vis.is_visible = false;
+            }
         }
 
         match *interaction {
             Interaction::Clicked => todo!(),
             Interaction::Hovered => {
-                moved.st();
-                vis.is_visible = true;
-                *glob = *loc;
+                match (
+                    config.beatgame(),
+                    config.beat_six(),
+                    config.beat_seven(),
+                    *loc,
+                ) {
+                    (false, false, false, ArrowLocation::NewGame | ArrowLocation::Continue) => {
+                        moved.st();
+                        vis.is_visible = true;
+                        *glob = *loc;
+                    },
+                    (true, false, false, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight) => {
+                        moved.st();
+                        vis.is_visible = true;
+                        *glob = *loc;
+                    },
+                    (true, true, _, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight | ArrowLocation::CustomNight) => {
+                        moved.st();
+                        vis.is_visible = true;
+                        *glob = *loc;
+                    },
+                    _ => {},
+                }
             }
             Interaction::None => {
                 if moved.moved() {
@@ -160,10 +190,19 @@ fn button_system(
     }
 }
 
-fn arrow_keys(keys: Res<Input<KeyCode>>, mut glob: ResMut<ArrowLocation>) {
+fn arrow_keys(keys: Res<Input<KeyCode>>, mut glob: ResMut<ArrowLocation>, config: Res<Config>) {
     if keys.just_pressed(KeyCode::Up) {
         match *glob {
-            ArrowLocation::NewGame => *glob = ArrowLocation::CustomNight,
+            ArrowLocation::NewGame => {
+                *glob = {
+                    match (config.beatgame(), config.beat_six(), config.beat_seven()) {
+                        (false, false, false) => ArrowLocation::Continue,
+                        (true, false, false) => ArrowLocation::SThNight,
+                        (true, true, _) => ArrowLocation::CustomNight,
+                        _ => panic!("invalid button config"),
+                    }
+                }
+            }
             ArrowLocation::Continue => *glob = ArrowLocation::NewGame,
             ArrowLocation::SThNight => *glob = ArrowLocation::Continue,
             ArrowLocation::CustomNight => *glob = ArrowLocation::SThNight,
@@ -173,8 +212,24 @@ fn arrow_keys(keys: Res<Input<KeyCode>>, mut glob: ResMut<ArrowLocation>) {
     if keys.just_pressed(KeyCode::Down) {
         match *glob {
             ArrowLocation::NewGame => *glob = ArrowLocation::Continue,
-            ArrowLocation::Continue => *glob = ArrowLocation::SThNight,
-            ArrowLocation::SThNight => *glob = ArrowLocation::CustomNight,
+            ArrowLocation::Continue => {
+                *glob = {
+                    match (config.beatgame(), config.beat_six(), config.beat_seven()) {
+                        (false, false, false) => ArrowLocation::NewGame,
+                        _ => ArrowLocation::SThNight,
+                    }
+                }
+            }
+            ArrowLocation::SThNight => {
+                *glob = {
+                    match (config.beatgame(), config.beat_six(), config.beat_seven()) {
+                        (false, false, false) => ArrowLocation::NewGame,
+                        (true, false, false) => ArrowLocation::NewGame,
+                        (true, true, _) => ArrowLocation::CustomNight,
+                        _ => panic!("invalid button config"),
+                    }
+                }
+            }
             ArrowLocation::CustomNight => *glob = ArrowLocation::NewGame,
         }
     }
@@ -429,6 +484,28 @@ fn setup(
         })
         .insert(OnTitleScreen)
         .insert(NightDisplay);
+
+    let animation = Tween::new(
+        EaseMethod::Linear,
+        TweeningType::Loop,
+        Duration::from_secs(20),
+        TransformPositionLens {
+            start: Vec3::new(0.0, 392.0, 5.0),
+            end: Vec3::new(0.0, -392.0, 5.0),
+        },
+    );
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: load!(asr, T452),
+            sprite: Sprite {
+                color: Color::rgba(1.0, 1.0, 1.0, 0.125),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(OnTitleScreen)
+        .insert(Animator::new(animation));
 
     channelone.play(load!(asr, Static2));
     channeltwo.play_looped(load!(asr, DarknessMusic));
