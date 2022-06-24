@@ -1,12 +1,11 @@
-use super::GameFrames;
-use crate::{assets::GameAssets, despawn_unload, from_ct, Count};
-use bevy::{asset::Asset, input::mouse::MouseMotion, prelude::*};
+use super::GameState;
+use crate::{despawn_unload, from_ct, save::Config};
+use bevy::prelude::*;
 use bevy_kira_audio::{AudioApp, AudioChannel};
-use rand::Rng;
-use std::{fmt::Display, path::PathBuf};
 
 mod blipplugin;
 mod freddyplugin;
+mod menuplugin;
 mod staticplugin;
 
 pub struct TitlePlugin;
@@ -20,17 +19,17 @@ impl Plugin for TitlePlugin {
             .add_audio_channel::<ChannelTwo>()
             .add_audio_channel::<ChannelThree>()
             .add_system_set(
-                SystemSet::on_enter(GameFrames::Title)
+                SystemSet::on_enter(GameState::Title)
                     .with_system(setup)
                     .with_system(night_counter),
             )
             .add_system_set(
-                SystemSet::on_update(GameFrames::Title)
-                    .with_system(game_buttons)
-                    .with_system(move_arrow),
+                SystemSet::on_update(GameState::Title)
+                    .with_system(show_hide)
+                    .with_system(button_system),
             )
             .add_system_set(
-                SystemSet::on_exit(GameFrames::Title).with_system(despawn_unload::<OnTitleScreen>),
+                SystemSet::on_exit(GameState::Title).with_system(despawn_unload::<OnTitleScreen>),
             );
     }
 }
@@ -53,20 +52,30 @@ pub struct TitleScreen;
 #[derive(Component)]
 pub struct OnTitleScreen;
 
-#[derive(Debug, Component, Clone, Copy)]
-pub enum ArrowHover {
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum ArrowLocation {
     NewGame,
     Continue,
-    ThNight,
+    SThNight,
     CustomNight,
 }
 
-pub struct ArrowLocation(ArrowHover);
+#[derive(Component)]
+struct NewGameButton;
+
+#[derive(Component)]
+struct ContinueButton;
+
+#[derive(Component)]
+struct SThNightButton;
+
+#[derive(Component)]
+struct CustomButton;
 
 fn night_counter(
     mut commands: Commands,
     asr: Res<AssetServer>,
-    night: Res<Count<usize>>,
+    config: Res<Config>,
     mut textures: ResMut<Assets<TextureAtlas>>,
 ) {
     let sheet = load!(asr, NightNumberTitleFrames);
@@ -81,145 +90,324 @@ fn night_counter(
                 ..default()
             },
             sprite: TextureAtlasSprite {
-                index: night.0,
+                index: config.level() as usize,
                 ..default()
             },
             ..default()
         })
-        .insert(NightDisplay);
+        .insert(NightDisplay)
+        .insert(OnTitleScreen);
 }
 
-fn game_buttons(
-    query: Query<(&ArrowHover, &Interaction)>,
-    mut arrow_location: ResMut<ArrowLocation>,
-) {
-    for (loc, i) in query.iter() {
-        match i {
-            Interaction::Clicked => todo!("{:?} click", loc),
-            Interaction::Hovered => arrow_location.0 = *loc,
-            Interaction::None => {}
+fn show_hide(glob: Res<ArrowLocation>, mut q: Query<&mut Visibility, With<NightDisplay>>) {
+    if glob.is_changed() {
+        for mut q in q.iter_mut() {
+            q.is_visible = *glob == ArrowLocation::Continue
         }
     }
 }
 
-fn move_arrow(mut query: Query<(&mut Transform, &Arrow)>, arrow_location: Res<ArrowLocation>) {
-    for (mut trans, _) in query.iter_mut() {
-        let mut new = from_ct!(275.0, 420.0, 203.0, 33.0, 101.0, 16.0, 1.0);
+struct Moved(bool);
 
-        match arrow_location.0 {
-            ArrowHover::NewGame => new.x -= 150.0,
-            ArrowHover::Continue => trans.translation = new,
-            ArrowHover::ThNight => new.x -= 165.0,
-            ArrowHover::CustomNight => new.x -= 192.0,
+impl Moved {
+    #[inline]
+    pub fn st(&mut self) {
+        self.0 = true;
+    }
+
+    #[inline]
+    pub fn sf(&mut self) {
+        self.0 = false;
+    }
+
+    #[inline]
+    pub fn moved(&self) -> bool {
+        self.0
+    }
+}
+
+fn button_system(
+    mut interaction_query: Query<
+        (&Interaction, &Children, &ArrowLocation),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut visa: Query<&mut Visibility>,
+    mut moved: ResMut<Moved>,
+    mut glob: ResMut<ArrowLocation>,
+) {
+    for (interaction, children, loc) in interaction_query.iter_mut() {
+        let mut vis = visa.get_mut(children[0]).unwrap();
+        match *interaction {
+            Interaction::None => {
+                if moved.moved() {
+                    vis.is_visible = false;
+                }
+            }
+            Interaction::Clicked => todo!(),
+            Interaction::Hovered => {
+                moved.st();
+                vis.is_visible = true;
+                *glob = *loc;
+            }
         }
-
-        trans.translation = new;
     }
 }
 
 fn setup(
     mut commands: Commands,
     asr: Res<AssetServer>,
+    config: Res<Config>,
     channelone: Res<AudioChannel<ChannelOne>>,
     channeltwo: Res<AudioChannel<ChannelTwo>>,
 ) {
-    // commands.spawn_bundle(UiCameraBundle::default());
-    commands.insert_resource(ArrowLocation(ArrowHover::Continue));
-
-    // title
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T444), // load_image(&asset_server, 444),
-        transform: Transform {
-            translation: from_ct!(172.0, 68.0, 201.0, 212.0, -3.0, -11.0, 1.0),
-            ..default()
-        },
-
-        ..default()
+    commands.insert_resource(Moved(false));
+    commands.insert_resource(match config.level() {
+        1 => ArrowLocation::NewGame,
+        _ => ArrowLocation::Continue,
     });
+    // Title
+    commands
+        .spawn_bundle(ImageBundle {
+            image: UiImage(load!(asr, T444)),
+            style: Style {
+                position: Rect {
+                    left: Val::Px(175.0),
+                    bottom: Val::Px(429.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(201.0),
+                    height: Val::Px(212.0),
+                },
+                ..default()
+            },
+            ..default()
+        })
+        .insert(OnTitleScreen);
 
     // new game
     commands
+        .spawn_bundle(ButtonBundle {
+            image: UiImage(load!(asr, T448)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Px(174.0),
+                    // top: Val::Px(404.0),
+                    bottom: Val::Px(283.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(203.0),
+                    height: Val::Px(33.0),
+                },
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn_bundle(ImageBundle {
+                image: UiImage(load!(asr, T450)),
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        left: Val::Px(-70.0),
+                        bottom: Val::Px(4.0),
+                        ..default()
+                    },
+                    size: Size {
+                        width: Val::Px(43.0),
+                        height: Val::Px(26.0),
+                    },
+                    ..default()
+                },
+                visibility: Visibility {
+                    is_visible: config.level() == 1,
+                },
+                ..default()
+            });
+        })
+        .insert(OnTitleScreen)
+        .insert(ArrowLocation::NewGame);
+
+    // continue
+    commands
+        .spawn_bundle(ButtonBundle {
+            image: UiImage(load!(asr, T449)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Px(173.0),
+                    bottom: Val::Px(211.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(204.0),
+                    height: Val::Px(34.0),
+                },
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn_bundle(ImageBundle {
+                image: UiImage(load!(asr, T450)),
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        left: Val::Px(-69.0),
+                        bottom: Val::Px(4.0),
+                        ..default()
+                    },
+                    size: Size {
+                        width: Val::Px(43.0),
+                        height: Val::Px(26.0),
+                    },
+                    ..default()
+                },
+                visibility: Visibility {
+                    is_visible: config.level() > 1,
+                },
+                ..default()
+            });
+        })
+        .insert(OnTitleScreen)
+        .insert(ArrowLocation::Continue);
+
+    // 6th night
+    commands
+        .spawn_bundle(ButtonBundle {
+            image: UiImage(load!(asr, T443)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Px(172.0),
+                    bottom: Val::Px(127.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(227.0),
+                    height: Val::Px(44.0),
+                },
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn_bundle(ImageBundle {
+                image: UiImage(load!(asr, T450)),
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        left: Val::Px(-73.0),
+                        bottom: Val::Px(9.0),
+                        ..default()
+                    },
+                    size: Size {
+                        width: Val::Px(43.0),
+                        height: Val::Px(26.0),
+                    },
+                    ..default()
+                },
+                visibility: Visibility { is_visible: false },
+                ..default()
+            });
+        })
+        .insert(OnTitleScreen)
+        .insert(ArrowLocation::SThNight);
+
+    // custom night
+    commands
+        .spawn_bundle(ButtonBundle {
+            image: UiImage(load!(asr, T526)),
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Px(171.0),
+                    bottom: Val::Px(59.0),
+                    ..default()
+                },
+                size: Size {
+                    width: Val::Px(306.0),
+                    height: Val::Px(44.0),
+                },
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|p| {
+            p.spawn_bundle(ImageBundle {
+                image: UiImage(load!(asr, T450)),
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        //left: Val::Px(111.0),
+                        //bottom: Val::Px(68.0),
+                        left: Val::Px(-60.0),
+                        bottom: Val::Px(9.0),
+                        ..default()
+                    },
+                    size: Size {
+                        width: Val::Px(43.0),
+                        height: Val::Px(26.0),
+                    },
+                    ..default()
+                },
+                visibility: Visibility { is_visible: false },
+                ..default()
+            });
+        })
+        .insert(OnTitleScreen)
+        .insert(ArrowLocation::CustomNight);
+
+    commands
+        .spawn_bundle(UiCameraBundle::default())
+        .insert(OnTitleScreen);
+
+    // version
+    commands
         .spawn_bundle(SpriteBundle {
-            texture: load!(asr, T448),
+            texture: load!(asr, T588),
             transform: Transform {
-                translation: from_ct!(275.0, 420.0, 203.0, 33.0, 101.0, 16.0, 1.0),
+                translation: from_ct!(26.0, 682.0, 89.0, 15.0, -1.0, -7.0, 1.0),
                 ..default()
             },
 
             ..default()
         })
-        .insert(ArrowHover::NewGame);
+        .insert(OnTitleScreen);
 
-    // continue
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T449),
-        transform: Transform {
-            translation: from_ct!(275.0, 492.0, 204.0, 34.0, 102.0, 17.0, 1.0),
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: load!(asr, Credit),
+            transform: Transform {
+                translation: from_ct!(1001.0, 642.0, 274.0, 66.0, 0.0, -5.0, 1.0),
+                ..default()
+            },
+
             ..default()
-        },
-
-        ..default()
-    });
-
-    // 6th night
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T443),
-        transform: Transform {
-            translation: from_ct!(285.0, 571.0, 227.0, 44.0, 113.0, 22.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
-
-    // custom night
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T526),
-        transform: Transform {
-            translation: from_ct!(324.0, 639.0, 306.0, 44.0, 153.0, 22.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
-
-    // version
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T588),
-        transform: Transform {
-            translation: from_ct!(26.0, 682.0, 89.0, 15.0, -1.0, -7.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
-
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, Credit),
-        transform: Transform {
-            translation: from_ct!(1001.0, 642.0, 274.0, 66.0, 0.0, -5.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
-
-    // arrow
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T450),
-        transform: Transform {
-            translation: from_ct!(132.0, 493.0, 43.0, 26.0, 21.0, 13.0, 1.0),
-            ..default()
-        },
-
-        ..default()
-    });
+        })
+        .insert(OnTitleScreen);
 
     // night
-    commands.spawn_bundle(SpriteBundle {
-        texture: load!(asr, T475),
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: load!(asr, T475),
+            transform: Transform {
+                translation: from_ct!(174.0, 512.0, 63.0, 22.0, -1.0, -5.0, 1.0),
+                ..default()
+            },
+
+            ..default()
+        })
+        .insert(OnTitleScreen)
+        .insert(NightDisplay);
+
+    // arrow
+    commands.spawn_bundle(ImageBundle {
+        image: UiImage(load!(asr, T450)),
         transform: Transform {
-            translation: from_ct!(174.0, 512.0, 63.0, 22.0, -1.0, -5.0, 1.0),
+            translation: from_ct!(132.0, 493.0, 43.0, 26.0, 21.0, 13.0, 1.0),
             ..default()
         },
 
@@ -229,5 +417,7 @@ fn setup(
     channelone.play(load!(asr, Static2));
     channeltwo.play_looped(load!(asr, DarknessMusic));
 
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert(OnTitleScreen);
 }

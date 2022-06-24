@@ -1,18 +1,13 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::GameFrames;
-
 pub struct StaticPlugin;
 
 impl Plugin for StaticPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameFrames::Title).with_system(setup))
-            .add_system_set(
-                SystemSet::on_update(GameFrames::Title)
-                    .with_system(static_changer)
-                    .with_system(static_op_changer),
-            );
+        app.add_startup_system(setup)
+            .add_system(static_changer)
+            .add_system(static_op_changer);
     }
 }
 

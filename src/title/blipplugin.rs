@@ -1,19 +1,14 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::GameFrames;
-
 pub struct BlipPlugin;
 
 impl Plugin for BlipPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameFrames::Title).with_system(setup))
-        .add_system_set(
-            SystemSet::on_update(GameFrames::Title)
-                .with_system(blip_changer)
-                .with_system(blip_op_changer)
-                .with_system(blip_vis_changer)
-        );
+        app.add_startup_system(setup)
+            .add_system(blip_changer)
+            .add_system(blip_op_changer)
+            .add_system(blip_vis_changer);
     }
 }
 

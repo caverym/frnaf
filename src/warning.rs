@@ -1,23 +1,21 @@
-use std::intrinsics::unlikely;
-
-use super::GameFrames;
-use crate::{assets::GameAssets, despawn_unload};
+use super::GameState;
+use crate::{assets::GameAssets, despawn_unload, title::ArrowLocation};
 use bevy::prelude::*;
 
 pub struct WarningPlugin;
 
 impl Plugin for WarningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameFrames::Frame17).with_system(setup))
+        app.add_system_set(SystemSet::on_enter(GameState::Frame17).with_system(setup))
             .add_system_set(
-                SystemSet::on_update(GameFrames::Frame17)
+                SystemSet::on_update(GameState::Frame17)
                     .with_system(fade)
                     .with_system(countdown)
                     .with_system(keyboard)
                     .with_system(mouse),
             )
             .add_system_set(
-                SystemSet::on_exit(GameFrames::Frame17)
+                SystemSet::on_exit(GameState::Frame17)
                     .with_system(despawn_unload::<OnWarningScreen>),
             );
     }
@@ -73,26 +71,22 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 #[derive(Deref, DerefMut)]
 pub struct FadeTimer(Timer);
 
-fn countdown(time: Res<Time>, mut timer: ResMut<WarningTimer>, mut fade_timer: ResMut<FadeTimer>) {
+fn countdown(
+    time: Res<Time>,
+    mut timer: ResMut<WarningTimer>,
+    mut fade_timer: ResMut<FadeTimer>,
+    mut game_state: ResMut<State<GameState>>,
+) {
     if timer.tick(time.delta()).finished() || timer.paused() {
-        fade_timer.tick(time.delta());
+        if fade_timer.tick(time.delta()).just_finished() {
+            game_state.set(GameState::Title).unwrap();
+        }
     }
 }
 
-fn fade(
-    timer: ResMut<FadeTimer>,
-    mut query: Query<&mut UiColor>,
-    mut game_state: ResMut<State<GameFrames>>,
-) {
+fn fade(timer: ResMut<FadeTimer>, mut query: Query<&mut UiColor, With<OnWarningScreen>>) {
     if timer.percent_left() == 100.0 {
         return;
-    }
-
-    if unlikely(timer.finished()) {
-        for mut color in query.iter_mut() {
-            color.0.set_a(0.0);
-            game_state.set(GameFrames::Title).unwrap();
-        }
     }
 
     for mut color in query.iter_mut() {
@@ -101,13 +95,13 @@ fn fade(
 }
 
 fn keyboard(
-    mut game_state: ResMut<State<GameFrames>>,
+    mut game_state: ResMut<State<GameState>>,
     keys: Res<Input<KeyCode>>,
     mut timer: ResMut<WarningTimer>,
 ) {
     if keys.just_pressed(KeyCode::Return) || keys.just_pressed(KeyCode::NumpadEnter) {
         if timer.finished() {
-            game_state.set(GameFrames::Title).unwrap();
+            game_state.set(GameState::Title).unwrap();
         } else {
             timer.pause();
             // timer.set_duration(Duration::from_secs_f32(2.0));
@@ -116,13 +110,13 @@ fn keyboard(
 }
 
 fn mouse(
-    mut game_state: ResMut<State<GameFrames>>,
+    mut game_state: ResMut<State<GameState>>,
     mouse: Res<Input<MouseButton>>,
     mut timer: ResMut<WarningTimer>,
 ) {
     if mouse.just_pressed(MouseButton::Left) {
         if timer.finished() {
-            game_state.set(GameFrames::Title).unwrap();
+            game_state.set(GameState::Title).unwrap();
         } else {
             timer.pause();
             // timer.set_duration(Duration::from_secs_f32(2.0));

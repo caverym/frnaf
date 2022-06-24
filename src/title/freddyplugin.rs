@@ -1,26 +1,21 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::GameFrames;
-
 pub struct FreddyPlugin;
 
 impl Plugin for FreddyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameFrames::Title).with_system(setup))
-            .add_system_set(
-                SystemSet::on_update(GameFrames::Title)
-                    .with_system(freddy_changer)
-                    .with_system(freddy_op_changer),
-            );
+        app.add_startup_system(setup)
+            .add_system(freddy_changer)
+            .add_system(freddy_op_changer);
     }
 }
 
 #[derive(Component, Deref, DerefMut)]
-pub struct FreddyOpTimer(Timer);
+struct FreddyOpTimer(Timer);
 
 #[derive(Component, Deref, DerefMut)]
-pub struct FreddyTimer(Timer);
+struct FreddyTimer(Timer);
 
 fn setup(
     mut commands: Commands,

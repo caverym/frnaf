@@ -1429,7 +1429,9 @@ dependencies = [
  "embed-resource",
  "paste",
  "rand",
+ "serde",
  "strum",
+ "toml",
 ]
 
 [[package]]
