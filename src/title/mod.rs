@@ -5,7 +5,7 @@ use crate::{despawn_unload, from_ct, save::Config};
 use bevy::prelude::*;
 use bevy_kira_audio::{AudioApp, AudioChannel};
 use bevy_tweening::{
-    lens::TransformPositionLens, Animator, EaseFunction, EaseMethod, Tween, TweeningPlugin,
+    lens::TransformPositionLens, Animator, EaseMethod, Tween, TweeningPlugin,
     TweeningType,
 };
 
@@ -115,29 +115,9 @@ fn show_hide(glob: Res<ArrowLocation>, mut q: Query<&mut Visibility, With<NightD
     }
 }
 
-struct Moved(bool);
-
-impl Moved {
-    #[inline]
-    pub fn st(&mut self) {
-        self.0 = true;
-    }
-
-    #[inline]
-    pub fn sf(&mut self) {
-        self.0 = false;
-    }
-
-    #[inline]
-    pub fn moved(&self) -> bool {
-        self.0
-    }
-}
-
 fn button_system(
     mut interaction_query: Query<(&Interaction, &Children, &ArrowLocation), With<Button>>,
     mut visa: Query<&mut Visibility>,
-    mut moved: ResMut<Moved>,
     mut glob: ResMut<ArrowLocation>,
     config: Res<Config>,
 ) {
@@ -162,17 +142,14 @@ fn button_system(
                     *loc,
                 ) {
                     (false, false, false, ArrowLocation::NewGame | ArrowLocation::Continue) => {
-                        moved.st();
                         vis.is_visible = true;
                         *glob = *loc;
                     },
                     (true, false, false, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight) => {
-                        moved.st();
                         vis.is_visible = true;
                         *glob = *loc;
                     },
                     (true, true, _, ArrowLocation::NewGame | ArrowLocation::Continue | ArrowLocation::SThNight | ArrowLocation::CustomNight) => {
-                        moved.st();
                         vis.is_visible = true;
                         *glob = *loc;
                     },
@@ -180,11 +157,9 @@ fn button_system(
                 }
             }
             Interaction::None => {
-                if moved.moved() {
                     if *glob != *loc {
                         vis.is_visible = false;
                     }
-                }
             }
         }
     }
@@ -242,7 +217,6 @@ fn setup(
     channelone: Res<AudioChannel<ChannelOne>>,
     channeltwo: Res<AudioChannel<ChannelTwo>>,
 ) {
-    commands.insert_resource(Moved(false));
     commands.insert_resource(match config.level() {
         1 => ArrowLocation::NewGame,
         _ => ArrowLocation::Continue,
